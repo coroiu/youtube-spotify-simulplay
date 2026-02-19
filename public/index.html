@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YouTube + Spotify SimulPlay</title>
+</head>
+<body>
+  <h1>SimulPlay</h1>
+
+  <section id="auth-section">
+    <button id="connect-btn">Connect Spotify</button>
+  </section>
+
+  <section id="input-section">
+    <label for="spotify-input">Spotify Track URI / URL</label>
+    <input id="spotify-input" type="text" placeholder="spotify:track:... or https://open.spotify.com/track/..." />
+
+    <label for="youtube-input">YouTube Video ID / URL</label>
+    <input id="youtube-input" type="text" placeholder="Video ID or https://www.youtube.com/watch?v=..." />
+  </section>
+
+  <section id="player-section">
+    <div id="youtube-container"></div>
+
+    <div id="transport">
+      <button id="play-btn">Play</button>
+      <button id="pause-btn">Pause</button>
+    </div>
+
+    <div id="status"></div>
+  </section>
+
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script src="https://sdk.scdn.co/spotify-player.js"></script>
+  <script src="/bundle.js"></script>
+</body>
+</html>

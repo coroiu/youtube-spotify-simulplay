@@ -2,6 +2,16 @@
 
 This project uses **bd** (beads) for issue tracking. Run `bd onboard` to get started.
 
+## Planning Mode
+
+**When in planning mode**, do NOT implement features directly from the plan. Instead:
+
+1. Break the plan into discrete tasks and file each as a beads issue: `bd file --title "..." --body "..."`
+2. Exit plan mode — the plan itself is NOT the deliverable, the beads issues are
+3. Work is then picked up via `bd ready` in a normal implementation session
+
+This ensures all work is tracked, reviewable, and can be handed off between sessions.
+
 ## Quick Reference
 
 ```bash
@@ -11,6 +21,23 @@ bd update <id> --status in_progress  # Claim work
 bd close <id>         # Complete work
 bd sync               # Sync with git
 ```
+
+## Committing During Implementation
+
+Commit **early and often** — small, focused commits make history easy to review and changes easy to revert.
+
+**RULES:**
+- Commit after each logical unit of work (a single function, a bug fix, a config change) — don't batch unrelated changes
+- Each commit should do one thing and be described in one short sentence
+- Never accumulate a large diff before committing — if `git diff` is getting long, commit what's done first
+- Commit before switching to a different part of the codebase
+
+**BAD:** one commit with "implement feature X" touching 20 files
+**GOOD:** a chain of commits like:
+- `add Route model`
+- `wire up Route to database`
+- `add Route API endpoint`
+- `add tests for Route endpoint`
 
 ## Landing the Plane (Session Completion)
 

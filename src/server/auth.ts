@@ -23,9 +23,15 @@ router.get('/login', (_req: Request, res: Response) => {
 });
 
 router.get('/callback', async (req: Request, res: Response) => {
+  const error = req.query.error as string | undefined;
+  if (error) {
+    res.status(400).send(`Spotify auth error: ${error}`);
+    return;
+  }
+
   const code = req.query.code as string | undefined;
   if (!code) {
-    res.status(400).send('Missing authorization code');
+    res.status(400).send(`Missing authorization code. Query params received: ${JSON.stringify(req.query)}`);
     return;
   }
 

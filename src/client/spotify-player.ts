@@ -13,6 +13,9 @@ export class SpotifyPlayer {
   private player: Spotify.Player | null = null;
   private deviceId: string | null = null;
   private currentState: PlayerState = 'unstarted';
+  private positionMs = 0;
+  private positionTimestamp = 0;
+  private durationMs = 0;
   private onStateChange: StateChangeCallback | null = null;
 
   constructor(onStateChange?: StateChangeCallback) {
@@ -56,6 +59,9 @@ export class SpotifyPlayer {
         this.onStateChange?.(this.currentState);
         return;
       }
+      this.positionMs = state.position;
+      this.positionTimestamp = Date.now();
+      this.durationMs = state.duration;
       this.currentState = state.paused ? 'paused' : 'playing';
       this.onStateChange?.(this.currentState);
     });
@@ -108,12 +114,14 @@ export class SpotifyPlayer {
   }
 
   getCurrentTime(): number {
-    // Synchronous estimate — state is updated via player_state_changed
-    return 0;
+    if (this.currentState !== 'playing' || this.positionTimestamp === 0) {
+      return this.positionMs;
+    }
+    return this.positionMs + (Date.now() - this.positionTimestamp);
   }
 
   getDuration(): number {
-    return 0;
+    return this.durationMs;
   }
 
   getState(): PlayerState {

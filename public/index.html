@@ -1,35 +1,199 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="bg-[#0a0a0a]">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>YouTube + Spotify SimulPlay</title>
+  <title>SimulPlay</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            spotify: '#1DB954',
+            'cinema-950': '#0a0a0a',
+            'cinema-900': '#111111',
+            'cinema-800': '#1a1a1a',
+            'cinema-700': '#242424',
+            'cinema-600': '#2e2e2e',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Force YT-injected iframe to fill its container */
+    #youtube-container iframe {
+      width: 100% !important;
+      height: 100% !important;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    /* Cinematic vignette overlay */
+    .vignette::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 0.5rem;
+      background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.7) 100%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Spotify playing indicator pulse */
+    @keyframes pulse-green {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+    #playing-dot.playing {
+      animation: pulse-green 1.5s ease-in-out infinite;
+    }
+
+    /* Collapsible setup drawer */
+    #input-section {
+      max-height: 200px;
+      overflow: hidden;
+      transition: max-height 0.3s ease, opacity 0.3s ease;
+      opacity: 1;
+    }
+    #input-section.collapsed {
+      max-height: 0;
+      opacity: 0;
+    }
+  </style>
 </head>
-<body>
-  <h1>SimulPlay</h1>
+<body class="bg-[#0a0a0a] text-white min-h-screen font-sans antialiased">
 
-  <section id="auth-section">
-    <button id="connect-btn">Connect Spotify</button>
-  </section>
+  <div class="max-w-3xl mx-auto px-4 py-6 flex flex-col gap-6">
 
-  <section id="input-section">
-    <label for="spotify-input">Spotify Track URI / URL</label>
-    <input id="spotify-input" type="text" placeholder="spotify:track:... or https://open.spotify.com/track/..." />
+    <!-- Header -->
+    <header class="flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <span class="text-spotify text-2xl font-bold tracking-tight">◈</span>
+        <span class="text-white text-xl font-semibold tracking-wide">SimulPlay</span>
+      </div>
+      <section id="auth-section">
+        <button
+          id="connect-btn"
+          class="px-4 py-2 rounded-full bg-spotify text-black text-sm font-semibold hover:brightness-110 transition-all"
+        >
+          Connect Spotify
+        </button>
+      </section>
+    </header>
 
-    <label for="youtube-input">YouTube Video ID / URL</label>
-    <input id="youtube-input" type="text" placeholder="Video ID or https://www.youtube.com/watch?v=..." />
-  </section>
-
-  <section id="player-section">
-    <div id="youtube-container"></div>
-
-    <div id="transport">
-      <button id="play-btn">Play</button>
-      <button id="pause-btn">Pause</button>
+    <!-- YouTube player -->
+    <div class="relative w-full aspect-video rounded-lg overflow-hidden bg-cinema-900 vignette">
+      <div id="youtube-container" class="absolute inset-0"></div>
+      <div id="yt-placeholder" class="absolute inset-0 flex items-center justify-center text-cinema-600">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
     </div>
 
-    <div id="status"></div>
-  </section>
+    <!-- Now Playing panel -->
+    <div class="flex items-center gap-4 px-4 py-3 rounded-lg bg-cinema-800 border border-cinema-700">
+      <img
+        id="track-art"
+        src=""
+        alt="Album art"
+        class="w-12 h-12 rounded object-cover bg-cinema-700 flex-shrink-0"
+        style="display:none"
+      />
+      <div class="w-12 h-12 rounded bg-cinema-700 flex-shrink-0 flex items-center justify-center" id="art-placeholder">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-cinema-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+        </svg>
+      </div>
+      <div class="flex-1 min-w-0">
+        <div id="track-name" class="text-sm font-medium text-white truncate">—</div>
+        <div id="track-artist" class="text-xs text-gray-400 truncate">—</div>
+      </div>
+      <div class="flex items-center gap-1.5 flex-shrink-0">
+        <span class="text-xs text-gray-500 font-medium">Spotify</span>
+        <div
+          id="playing-dot"
+          class="w-2 h-2 rounded-full bg-cinema-600"
+        ></div>
+      </div>
+    </div>
+
+    <!-- Transport controls -->
+    <div class="flex flex-col items-center gap-3">
+      <div class="flex items-center gap-4">
+        <button
+          id="play-btn"
+          class="w-14 h-14 rounded-full bg-spotify text-black flex items-center justify-center hover:brightness-110 active:scale-95 transition-all shadow-lg"
+          title="Play"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+        </button>
+        <button
+          id="pause-btn"
+          class="w-12 h-12 rounded-full bg-cinema-700 text-white flex items-center justify-center hover:bg-cinema-600 active:scale-95 transition-all"
+          title="Pause"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+          </svg>
+        </button>
+      </div>
+      <div id="status" class="text-xs text-gray-500 h-4"></div>
+    </div>
+
+    <!-- Collapsible setup drawer -->
+    <div class="rounded-lg bg-cinema-800 border border-cinema-700 overflow-hidden">
+      <button
+        id="setup-toggle"
+        class="w-full flex items-center justify-between px-4 py-3 text-sm text-gray-400 hover:text-white transition-colors"
+        onclick="
+          const s = document.getElementById('input-section');
+          const icon = document.getElementById('toggle-icon');
+          s.classList.toggle('collapsed');
+          icon.style.transform = s.classList.contains('collapsed') ? 'rotate(-90deg)' : 'rotate(0deg)';
+        "
+      >
+        <span class="font-medium uppercase tracking-widest text-xs">Setup</span>
+        <svg id="toggle-icon" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      <section id="input-section" class="px-4 pb-4">
+        <div class="flex flex-col gap-3 pt-1">
+          <div>
+            <label for="spotify-input" class="block text-xs uppercase tracking-widest text-gray-500 mb-1">
+              Spotify Track
+            </label>
+            <input
+              id="spotify-input"
+              type="text"
+              placeholder="spotify:track:... or https://open.spotify.com/track/..."
+              class="w-full px-3 py-2 rounded-md bg-cinema-700 border border-cinema-600 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-spotify transition-colors"
+            />
+          </div>
+          <div>
+            <label for="youtube-input" class="block text-xs uppercase tracking-widest text-gray-500 mb-1">
+              YouTube Video
+            </label>
+            <input
+              id="youtube-input"
+              type="text"
+              placeholder="Video ID or https://www.youtube.com/watch?v=..."
+              class="w-full px-3 py-2 rounded-md bg-cinema-700 border border-cinema-600 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-spotify transition-colors"
+            />
+          </div>
+        </div>
+      </section>
+    </div>
+
+  </div>
 
   <script src="https://www.youtube.com/iframe_api"></script>
   <script src="https://sdk.scdn.co/spotify-player.js"></script>

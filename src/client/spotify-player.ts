@@ -127,4 +127,8 @@ export class SpotifyPlayer {
   getState(): PlayerState {
     return this.currentState;
   }
+
+  getRawState(): Promise<Spotify.PlaybackState | null> {
+    return this.player?.getCurrentState() ?? Promise.resolve(null);
+  }
 }

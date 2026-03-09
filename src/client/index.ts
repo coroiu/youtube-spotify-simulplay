@@ -38,6 +38,34 @@ function setStatus(msg: string): void {
   if (el) el.textContent = msg;
 }
 
+function updateNowPlaying(name: string, artist: string, artUrl: string, isPlaying: boolean): void {
+  const trackName = document.getElementById('track-name');
+  const trackArtist = document.getElementById('track-artist');
+  const trackArt = document.getElementById('track-art') as HTMLImageElement | null;
+  const artPlaceholder = document.getElementById('art-placeholder');
+  const playingDot = document.getElementById('playing-dot');
+
+  if (trackName) trackName.textContent = name || '—';
+  if (trackArtist) trackArtist.textContent = artist || '—';
+
+  if (trackArt && artPlaceholder) {
+    if (artUrl) {
+      trackArt.src = artUrl;
+      trackArt.style.display = 'block';
+      artPlaceholder.style.display = 'none';
+    } else {
+      trackArt.style.display = 'none';
+      artPlaceholder.style.display = 'flex';
+    }
+  }
+
+  if (playingDot) {
+    playingDot.className = isPlaying
+      ? 'w-2 h-2 rounded-full bg-spotify playing'
+      : 'w-2 h-2 rounded-full bg-cinema-600';
+  }
+}
+
 async function init(): Promise<void> {
   const connectBtn = document.getElementById('connect-btn') as HTMLButtonElement | null;
   const playBtn = document.getElementById('play-btn') as HTMLButtonElement | null;
@@ -63,8 +91,16 @@ async function init(): Promise<void> {
     setStatus(`YouTube: ${state}`);
   });
 
-  const spPlayer = new SpotifyPlayer((state) => {
+  const spPlayer = new SpotifyPlayer(async (state) => {
     setStatus(`Spotify: ${state}`);
+    const raw = await spPlayer.getRawState();
+    const track = raw?.track_window?.current_track;
+    if (track) {
+      const artUrl = track.album.images[0]?.url ?? '';
+      updateNowPlaying(track.name, track.artists.map((a) => a.name).join(', '), artUrl, state === 'playing');
+    } else {
+      updateNowPlaying('—', '—', '', false);
+    }
   });
 
   const controller = new SyncController(ytPlayer, spPlayer);
@@ -79,6 +115,9 @@ async function init(): Promise<void> {
 
     controller.play();
     setStatus('Playing...');
+
+    const placeholder = document.getElementById('yt-placeholder');
+    if (placeholder) placeholder.style.display = 'none';
   });
 
   pauseBtn?.addEventListener('click', () => {

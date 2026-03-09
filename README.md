@@ -34,6 +34,28 @@ PORT=3000
 
 In your Spotify app dashboard, add `http://localhost:3000/auth/callback` as a Redirect URI.
 
+## HTTPS (required outside localhost)
+
+The Spotify Web Playback SDK only works in a [secure context](https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts). On `localhost` plain HTTP works fine. For any other host you need HTTPS.
+
+The easiest way to get a locally-trusted certificate is [mkcert](https://github.com/FiloSottile/mkcert):
+
+```sh
+brew install mkcert       # or your OS equivalent
+mkcert -install           # installs local CA (once)
+mkcert localhost 127.0.0.1
+```
+
+This produces `localhost.pem` and `localhost-key.pem`. Point the server at them in `.env`:
+
+```
+HTTPS_KEY=localhost-key.pem
+HTTPS_CERT=localhost.pem
+SPOTIFY_REDIRECT_URI=https://localhost:3000/auth/callback
+```
+
+Update your Spotify app dashboard redirect URI to `https://localhost:3000/auth/callback` as well, then open `https://localhost:3000`.
+
 ## Running
 
 **Development** (server + client bundler both in watch mode):
